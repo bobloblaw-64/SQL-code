@@ -19,8 +19,8 @@ CREATE TABLE Product (
     productId TEXT PRIMARY KEY NOT NULL,
     productName TEXT,
     category TEXT,
-    basePrice REAL,
-    status TEXT
+    basePrice REAL CHECK (basePrice > 0),
+    status TEXT CHECK (status in ('ACTIVE', 'DISCONTINUED'))
 );
 
 CREATE TABLE SizeOption (
@@ -43,7 +43,7 @@ CREATE TABLE OrderItem (
     lineNo INTEGER NOT NULL,
     productId TEXT NOT NULL,
     size TEXT NOT NULL,
-    quantity INTEGER NOT NULL,
+    quantity INTEGER NOT NULL CHECK (quantity BETWEEN 0 AND 10),
     unitPrice REAL,
     lineTotal REAL,
     PRIMARY KEY (orderId, lineNo),
@@ -62,7 +62,7 @@ CREATE TABLE Ingredient (
 CREATE TABLE Recipe (
     productId TEXT NOT NULL,
     ingredientId TEXT NOT NULL,
-    amountRequired REAL,
+    amountRequired REAL CHECK (amountRequired > 0),
     PRIMARY KEY (productId, ingredientId),
     FOREIGN KEY (productId) REFERENCES Product (productId) ON DELETE CASCADE,
     FOREIGN KEY (ingredientId) REFERENCES Ingredient (ingredientId) ON DELETE RESTRICT
