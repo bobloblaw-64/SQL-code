@@ -1,4 +1,6 @@
-PRAGMA foreign_keys = ON;
+--By Finlay Thomson (23953297)
+
+PRAGMA foreign_keys = ON; --This isnt enforced by default
 
 CREATE TABLE Store (
     storeId TEXT PRIMARY KEY NOT NULL,
@@ -13,9 +15,9 @@ CREATE TABLE Member (
     memberEmail TEXT,
     cardNumber TEXT CHECK (
         cardNumber IS NULL OR (
-            length(cardNumber) = 10
+            length(cardNumber) = 10--BR5, card number must be 10 digits
             
-            AND cardNumber NOT GLOB '*[^0-9]*'
+            AND cardNumber NOT GLOB '*[^0-9]*'--BR5, card num must be only digits
             
             AND (
                 10 * CAST(substr(cardNumber, 1, 1) AS INTEGER) +
@@ -28,7 +30,7 @@ CREATE TABLE Member (
                 3 * CAST(substr(cardNumber, 8, 1) AS INTEGER) +
                 2 * CAST(substr(cardNumber, 9, 1) AS INTEGER) +
                 1 * CAST(substr(cardNumber, 10, 1) AS INTEGER)
-            ) % 11 = 0
+            ) % 11 = 0 --BR5 checksum
         )
     ),
     joinDate TEXT
@@ -38,8 +40,8 @@ CREATE TABLE Product (
     productId TEXT PRIMARY KEY NOT NULL,
     productName TEXT,
     category TEXT,
-    basePrice REAL CHECK (basePrice > 0),
-    status TEXT CHECK (status in ('ACTIVE', 'DISCONTINUED'))
+    basePrice REAL CHECK (basePrice > 0), --BR1 enforcement
+    status TEXT CHECK (status in ('ACTIVE', 'DISCONTINUED')) --BR2 enforcement
 );
 
 CREATE TABLE SizeOption (
@@ -62,7 +64,7 @@ CREATE TABLE OrderItem (
     lineNo INTEGER NOT NULL,
     productId TEXT NOT NULL,
     size TEXT NOT NULL,
-    quantity INTEGER NOT NULL CHECK (quantity BETWEEN 0 AND 10),
+    quantity INTEGER NOT NULL CHECK (quantity BETWEEN 0 AND 10),--BR3 enforcement
     unitPrice REAL,
     lineTotal REAL,
     PRIMARY KEY (orderId, lineNo),
@@ -81,7 +83,7 @@ CREATE TABLE Ingredient (
 CREATE TABLE Recipe (
     productId TEXT NOT NULL,
     ingredientId TEXT NOT NULL,
-    amountRequired REAL CHECK (amountRequired > 0),
+    amountRequired REAL CHECK (amountRequired > 0), --BR4 enforcement
     PRIMARY KEY (productId, ingredientId),
     FOREIGN KEY (productId) REFERENCES Product (productId) ON DELETE CASCADE,
     FOREIGN KEY (ingredientId) REFERENCES Ingredient (ingredientId) ON DELETE RESTRICT
