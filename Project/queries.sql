@@ -23,7 +23,7 @@
 .print ''
 .print '======================================================================'
 -- IMPORTANT: Replace 12345678 below with your Student Number
-.print ' Student ID: 12345678' 
+.print ' Student ID: 23953297' 
 .print ' CITS1402 - BUBBLE TROUBLE'
 .print ' MISSION 6: BUSINESS QUERIES'
 .print '======================================================================'
@@ -44,6 +44,11 @@
 
 -- >>> STUDENT QUERY Q1: WRITE YOUR SINGLE SQLITE QUERY BELOW >>>
 
+SELECT productId, productName, category, basePrice
+FROM Product
+WHERE status = 'ACTIVE'
+ORDER BY category, productName;
+
 -- <<< END STUDENT QUERY Q1 >>>
 
 .print '------------------------------ END Q1 ---------------------------------'
@@ -61,6 +66,13 @@
 .print '----------------------------------------------------------------------'
 
 -- >>> STUDENT QUERY Q2: WRITE YOUR SINGLE SQLITE QUERY BELOW >>>
+
+SELECT 
+    ingredientName, 
+    COUNT(DISTINCT productId) AS productCount
+FROM Ingredient 
+LEFT JOIN Recipe USING (ingredientId)
+GROUP BY ingredientId, ingredientName;
 
 -- <<< END STUDENT QUERY Q2 >>>
 
@@ -80,6 +92,15 @@
 
 -- >>> STUDENT QUERY Q3: WRITE YOUR SINGLE SQLITE QUERY BELOW >>>
 
+SELECT 
+    storeName,
+    COUNT(DISTINCT orderId) AS numOrders,
+    COALESCE(SUM(lineTotal), 0) AS totalRevenue
+FROM Store
+LEFT JOIN SalesOrder USING (storeId)
+LEFT JOIN OrderItem USING (orderId)
+GROUP BY storeName;
+
 -- <<< END STUDENT QUERY Q3 >>>
 
 .print '------------------------------ END Q3 ---------------------------------'
@@ -98,6 +119,14 @@
 
 -- >>> STUDENT QUERY Q4: WRITE YOUR SINGLE SQLITE QUERY BELOW >>>
 
+SELECT 
+    productName,
+    SUM(quantity) AS totalQuantity
+FROM Product JOIN OrderItem USING (productId)
+GROUP BY productName
+HAVING totalQuantity >= 20
+ORDER BY totalQuantity DESC;
+
 -- <<< END STUDENT QUERY Q4 >>>
 
 .print '------------------------------ END Q4 ---------------------------------'
@@ -114,6 +143,14 @@
 .print '----------------------------------------------------------------------'
 
 -- >>> STUDENT QUERY Q5: WRITE YOUR SINGLE SQLITE QUERY BELOW >>>
+
+SELECT productId, productName
+FROM Product
+WHERE status = 'ACTIVE'
+AND productId NOT IN (
+    SELECT DISTINCT productId
+    FROM OrderItem
+);
 
 -- <<< END STUDENT QUERY Q5 >>>
 
@@ -133,6 +170,25 @@
 
 -- >>> STUDENT QUERY Q6: WRITE YOUR SINGLE SQLITE QUERY BELOW >>>
 
+SELECT
+    memberName,
+    SUM(lineTotal) AS totalSpending
+FROM Member
+JOIN SalesOrder USING (memberId)
+JOIN OrderItem USING (orderId)
+GROUP BY memberId, memberName
+HAVING totalSpending > (
+
+    SELECT AVG(memTotal)
+    FROM (
+    SELECT SUM(lineTotal) AS memTotal
+        FROM SalesOrder
+        JOIN OrderItem USING (orderId)
+        GROUP BY memberId
+        HAVING memTotal > 0
+    )
+);
+
 -- <<< END STUDENT QUERY Q6 >>>
 
 .print '------------------------------ END Q6 ---------------------------------'
@@ -149,6 +205,20 @@
 .print '----------------------------------------------------------------------'
 
 -- >>> STUDENT QUERY Q7: WRITE YOUR SINGLE SQLITE QUERY BELOW >>>
+
+SELECT
+    storeName,
+    productName
+FROM Store
+JOIN SalesOrder USING (storeId)
+JOIN OrderItem USING (orderId)
+JOIN Product USING (productId)
+
+WHERE productName IN (
+    SELECT productName
+    
+)
+
 
 -- <<< END STUDENT QUERY Q7 >>>
 
