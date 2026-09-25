@@ -1,1 +1,156 @@
 By Finlay Thomson (23953297)
+
+Basic test data i added initialy:
+
+INSERT INTO Store VALUES
+    ('s1', 'store1', 'perth', '2003-10-07'),
+    ('s2', 'store2', 'victoria park', '1969-04-20');
+INSERT INTO Member VALUES 
+    (1, 'bob', 'bob@test.com', '5264579466', '2020-01-01'),
+    (2, 'alice', 'alice@test.com', NULL , '2001-09-11');
+INSERT INTO SizeOption VALUES 
+    ('S', 0.0), ('M', 0.5), ('L', 1.0);
+INSERT INTO Product VALUES 
+    ('p1', 'greenTea', 'tea', 5.00, 'ACTIVE');
+
+Test 1:
+
+Testing that the CHECK constraint on Member will reject an invalid checksum.
+I expect the following code to produce an error as 1234567890 doesnt satisfy the checksum formula:
+
+    INSERT INTO Member 
+    VALUES (99, 'Bad', 'bad@test.com', '1234567890', '2020-01-01');
+
+As predicted, the test result was:
+
+    sqlite> .read test1.sql
+    Error near line 1 of test1.sql: CHECK constraint failed: /*lots of lines printed here
+                                                        but i delted cos u get the idea */
+Test 2:
+
+Testing foreign key enforcement. In the following inserts, 
+I expect order 1 to succeed. order 2 should fail as there is no member 64.
+Similarly order 3 should fail as there is no store 3. The other insert statements hsould be successful.
+
+    INSERT INTO SalesOrder VALUES
+    (1, 1, 's1', '2026-09-11', '1500');
+    INSERT INTO SalesOrder VALUES
+    (2, 64, 's2', '2026-09-11', '1100');
+    INSERT INTO SalesOrder VALUES
+    (3, 1, 's3', '2026-09-11', '1100');
+
+My expectations were met:
+
+    sqlite> .read test2.sql
+    Error near line 4 of test2.sql: FOREIGN KEY constraint failed
+    Error near line 6 of test2.sql: FOREIGN KEY constraint failed
+    sqlite> select * from SalesOrder;
+    orderId  memberId  storeId  orderDate   orderTime
+    -------  --------  -------  ----------  ---------
+        1         1  s1       2026-09-11  1500
+
+order 2 and 3 haev foriegn keys which should reference member 64 and store 3, this test expectantly results in an error message.
+
+Only order 1 was insererted, as i predicted.
+
+Test 3:
+
+first i cleared SalesOrder to test witha clean slate:
+    DELETE FROM SalesOrder
+then gave bob 8 order items to compare him to alice:
+    INSERT INTO SalesOrder (orderId, memberId, storeId)
+    VALUES (101, 1, 's1');
+
+    INSERT INTO OrderItem (orderId, lineNo, productId, size, quantity)
+    VALUES (101, 1, 'p1', 'S', 8);
+now if bob and alice both make an identical order, of quantity 3, 
+bob's should be 1 product cheaper as he passes the free drink threshold:
+
+    --bob's:
+    INSERT INTO SalesOrder (orderId, memberId, storeId)
+    VALUES (6969, 1, 's1');
+
+    INSERT INTO OrderItem (orderId, lineNo, productId, size, quantity)
+    VALUES (6969, 1, 'p1', 'S', 3);
+
+    --alice's:
+    INSERT INTO SalesOrder (orderId, memberId, storeId)
+    VALUES (420, 2, 's1');
+
+    INSERT INTO OrderItem (orderId, lineNo, productId, size, quantity)
+    VALUES (420, 1, 'p1', 'S', 3);
+
+result:
+
+    sqlite> .read test3.sql
+    sqlite> select lineTotal from OrderItem;
+    lineTotal
+    ---------
+        40.0
+        10.0
+        15.0
+
+the 40 is the head start i gave bob and we can see bob spent $5 less than alice,
+confirming our prediction. in other words this shows how 2 parties can make the same order and get differant pricing
+based on order history, ie my reward formula works.
+
+Test 4:
+to show the previous on a boundry case ( i think i got a bit ahead of myself earlier):
+get alice to 9 drinks:
+
+    INSERT INTO SalesOrder (orderId, memberId, storeId)
+    VALUES (1337, 2, 's1');
+
+    INSERT INTO OrderItem (orderId, lineNo, productId, size, quantity)
+    VALUES (1337, 1, 'p1', 'S', 6);
+
+she is on 9 (her id is 2):
+
+    sqlite> select memberId, sum(quantity)
+    ...> from SalesOrder JOIN OrderItem USING (orderId)
+    ...> group by memberId;
+    memberId  sum(quantity)
+    --------  -------------
+        1             11
+        2              9
+
+hence after adding one product i'd expect the lineTotal to be $0:
+
+    INSERT INTO SalesOrder (orderId, memberId, storeId)
+    VALUES (6100, 2, 's1');
+
+    INSERT INTO OrderItem (orderId, lineNo, productId, size, quantity)
+    VALUES (6100, 1, 'p1', 'S', 1);
+
+    select lineTotal
+    from OrderItem
+    where orderId = 6100;
+
+sqlite> .read test4.sql
+lineTotal
+---------
+      0.0
+
+as predicted.
+
+Test 5:
+
+as per the spec in mission 9.2: "Every member must appear, including a member who has never placed an order. For such a member,
+the summary should report zero orders, zero drinks and zero spending rather than omit the member."
+
+if we create such a member as thus, and then check their stats:
+
+    INSERT INTO Member VALUES (3, 'carol', 'carol@test.com', NULL, '1939-09-01');
+    SELECT * FROM MemberSummary WHERE memberId = 3;
+
+we would hope for them to not be omited, and just report zeros, as stated above:
+
+    sqlite> .read createViews.sql
+    sqlite> .read test5.sql
+    memberId  memberName  totalOrders  totalDrinks  totalSpent
+    --------  ----------  -----------  -----------  ----------
+        3  carol                 0            0           0
+
+this happens as desired.
+
+

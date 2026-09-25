@@ -1,0 +1,7 @@
+
+INSERT INTO SalesOrder VALUES
+(1, 1, 's1', '2026-09-11', '1500');
+INSERT INTO SalesOrder VALUES
+(2, 64, 's2', '2026-09-11', '1100');
+INSERT INTO SalesOrder VALUES
+(3, 1, 's3', '2026-09-11', '1100');
