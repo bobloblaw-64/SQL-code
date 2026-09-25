@@ -252,7 +252,7 @@ SELECT
     SUM(oi.quantity) AS totalSold
 FROM Product p
 JOIN OrderItem oi USING (productId)
-GROUP BY p.productName, p.category
+GROUP BY p.productId, p.productName, p.category
 HAVING totalSold > (
     SELECT AVG(catTotal)
     FROM (
