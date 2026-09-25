@@ -206,19 +206,26 @@ HAVING totalSpending > (
 
 -- >>> STUDENT QUERY Q7: WRITE YOUR SINGLE SQLITE QUERY BELOW >>>
 
-SELECT
-    storeName,
-    productName
+WITH
+    --for each store & product combo, what is the total quantity?
+    store_prod_qty AS (    
+        SELECT storeId, productId, SUM(quantity) AS totalQty
+        FROM SalesOrder JOIN OrderItem USING (orderId)
+        GROUP BY storeId, productId
+    ),
+    --for each store, what is the qty of the most sold product?
+    store_max_prod AS (
+        SELECT storeId, MAX(totalQty) AS maxQty
+        FROM store_prod_qty
+        GROUP BY storeId
+    )
+
+SELECT storeName, productName
 FROM Store
-JOIN SalesOrder USING (storeId)
-JOIN OrderItem USING (orderId)
-JOIN Product USING (productId)
-
-WHERE productName IN (
-    SELECT productName
-    
-)
-
+    JOIN store_prod_qty USING (storeId)
+    JOIN store_max_prod USING (storeId)
+    JOIN Product USING (productId)
+WHERE totalQty = maxQty;
 
 -- <<< END STUDENT QUERY Q7 >>>
 
@@ -238,6 +245,24 @@ WHERE productName IN (
 .print '----------------------------------------------------------------------'
 
 -- >>> STUDENT QUERY Q8: WRITE YOUR SINGLE SQLITE QUERY BELOW >>>
+
+SELECT
+    p.productName,
+    p.category,
+    SUM(oi.quantity) AS totalSold
+FROM Product p
+JOIN OrderItem oi USING (productId)
+GROUP BY p.productName, p.category
+HAVING totalSold > (
+    SELECT AVG(catTotal)
+    FROM (
+        SELECT SUM(oi2.quantity) AS catTotal
+        FROM Product p2
+        JOIN OrderItem oi2 USING (productId)
+        WHERE p2.category = p.category
+        GROUP BY p2.productId
+    )
+);
 
 -- <<< END STUDENT QUERY Q8 >>>
 
