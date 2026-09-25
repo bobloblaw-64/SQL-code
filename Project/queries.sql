@@ -99,7 +99,7 @@ SELECT
 FROM Store
 LEFT JOIN SalesOrder USING (storeId)
 LEFT JOIN OrderItem USING (orderId)
-GROUP BY storeName;
+GROUP BY storeId, storeName;
 
 -- <<< END STUDENT QUERY Q3 >>>
 
@@ -123,7 +123,7 @@ SELECT
     productName,
     SUM(quantity) AS totalQuantity
 FROM Product JOIN OrderItem USING (productId)
-GROUP BY productName
+GROUP BY productId, productName
 HAVING totalQuantity >= 20
 ORDER BY totalQuantity DESC;
 

@@ -1,10 +1,10 @@
 --By Finlay Thomson (23953297)
 
-CREATE TRIGGER trga_price_calculator
+CREATE TRIGGER UnitPrice_and_LineTotal_Calc
 AFTER INSERT ON OrderItem
 FOR EACH ROW
-WHEN NEW.unitPrice IS NULL
 BEGIN
+    --Trigger A, calculate unitPrice if its null
     UPDATE OrderItem
     SET unitPrice = (
         SELECT p.basePrice + s.sizeSurcharge
@@ -13,14 +13,10 @@ BEGIN
         AND s.size = NEW.size
     )
     WHERE orderId = NEW.orderId 
-    AND lineNo = NEW.lineNo;
-END;
+    AND lineNo = NEW.lineNo
+    AND NEW.unitPrice IS NULL;
 
-CREATE TRIGGER trgb_free_drink
-AFTER INSERT ON OrderItem
-FOR EACH ROW
-WHEN NEW.lineTotal IS NULL
-BEGIN
+    -- Trigger B, caclulate line total if null
     UPDATE OrderItem
     SET lineTotal = (
         SELECT
@@ -33,8 +29,8 @@ BEGIN
                         WHERE memberId = so.memberId
                     ) % 10 < NEW.quantity
                 )
-                THEN (NEW.quantity - 1) * unitPrice
-                ELSE NEW.quantity * unitPrice
+                THEN (NEW.quantity - 1) * unitPrice --price with free drink
+                ELSE NEW.quantity * unitPrice --normal price
             END
         FROM OrderItem
         JOIN SalesOrder so USING (orderId)
@@ -42,5 +38,6 @@ BEGIN
         AND lineNo = NEW.lineNo
     )
     WHERE orderId = NEW.orderId
-    AND lineNo = NEW.lineNo;
+    AND lineNo = NEW.lineNo
+    AND NEW.lineTotal IS NULL;
 END;

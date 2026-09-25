@@ -13,7 +13,7 @@ JOIN Product USING (productId)
 
 WHERE lineTotal IS NOT NULL
 
-GROUP BY orderMonth, storeName, productName;
+GROUP BY orderMonth, storeId, storeName, productId, productName;
 
 CREATE VIEW MemberSummary AS
 SELECT

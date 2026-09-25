@@ -12,8 +12,8 @@ CREATE TABLE Store (
 CREATE TABLE Member (
     memberId INTEGER PRIMARY KEY NOT NULL,
     memberName TEXT,
-    memberEmail TEXT,
-    cardNumber TEXT CHECK (
+    memberEmail TEXT UNIQUE,
+    cardNumber TEXT UNIQUE CHECK (
         cardNumber IS NULL OR (
             length(cardNumber) = 10--BR5, card number must be 10 digits
             
@@ -40,8 +40,8 @@ CREATE TABLE Product (
     productId TEXT PRIMARY KEY NOT NULL,
     productName TEXT,
     category TEXT,
-    basePrice REAL CHECK (basePrice > 0), --BR1 enforcement
-    status TEXT CHECK (status in ('ACTIVE', 'DISCONTINUED')) --BR2 enforcement
+    basePrice REAL NOT NULL CHECK (basePrice > 0), --BR1 enforcement
+    status TEXT NOT NULL CHECK (status in ('ACTIVE', 'DISCONTINUED')) --BR2 enforcement
 );
 
 CREATE TABLE SizeOption (
@@ -64,7 +64,7 @@ CREATE TABLE OrderItem (
     lineNo INTEGER NOT NULL,
     productId TEXT NOT NULL,
     size TEXT NOT NULL,
-    quantity INTEGER NOT NULL CHECK (quantity BETWEEN 0 AND 10),--BR3 enforcement
+    quantity INTEGER NOT NULL CHECK (quantity BETWEEN 1 AND 10),--BR3 enforcement
     unitPrice REAL,
     lineTotal REAL,
     PRIMARY KEY (orderId, lineNo),
@@ -85,6 +85,6 @@ CREATE TABLE Recipe (
     ingredientId TEXT NOT NULL,
     amountRequired REAL CHECK (amountRequired > 0), --BR4 enforcement
     PRIMARY KEY (productId, ingredientId),
-    FOREIGN KEY (productId) REFERENCES Product (productId) ON DELETE CASCADE,
+    FOREIGN KEY (productId) REFERENCES Product (productId) ON DELETE RESTRICT,
     FOREIGN KEY (ingredientId) REFERENCES Ingredient (ingredientId) ON DELETE RESTRICT
 );
