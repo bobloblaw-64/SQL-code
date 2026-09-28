@@ -24,8 +24,7 @@ I expect the following code to produce an error as 1234567890 doesnt satisfy the
 As predicted, the test result was:
 
     sqlite> .read test1.sql
-    Error near line 1 of test1.sql: CHECK constraint failed: /*lots of lines printed here
-                                                        but i delted cos u get the idea */
+    Error near line 1 of test1.sql: CHECK constraint failed: ...
 Test 2:
 
 Testing foreign key enforcement. In the following inserts, 
